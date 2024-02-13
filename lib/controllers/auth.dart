@@ -3,37 +3,41 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 class AuthService {
-  // Method for user registration
-  Future<String?> registration({
-    required String email,
-    required String password,
-  }) async {
-    try {
-      // Attempt to create a user with the provided email and password
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      return 'Success';
-    } on FirebaseAuthException catch (e) {
-      // Handle specific FirebaseAuthException cases
-      if (e.code == 'weak-password') {
-        return 'The password provided is too weak.';
-      } else if (e.code == 'email-already-in-use') {
-        return 'The account already exists for that email.';
-      } else {
-        // Check for network-related issue
-        if (e.code == 'network-request-failed') {
-          return 'No internet connection.';
-        }
-        // Return the general error message for other exceptions
-        return e.message;
-      }
-    } catch (e) {
-      // Return the general error message for any other exceptions
-      return e.toString();
+
+Future<String?> registration({
+  required String email,
+  required String password,
+  required String confirmPassword,
+}) async {
+  try {
+    if (password != confirmPassword) {
+      return 'Password and Confirm Password do not match.';
     }
+
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    return 'Success';
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'weak-password') {
+      return 'The password provided is too weak.';
+    } else if (e.code == 'email-already-in-use') {
+      return 'The account already exists for that email.';
+    } else {
+      if (e.code == 'network-request-failed') {
+        return 'No internet connection.';
+      }
+      return e.message;
+    }
+  } catch (e) {
+    return e.toString();
   }
+}
+
+
+
 
   // Method for user login
   Future<String?> login({

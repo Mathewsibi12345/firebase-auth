@@ -13,6 +13,7 @@ class _AddUserState extends State<AddUser> {
    // Text editing controllers for handling user input
 final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _loading = false; // Variable to track loading state
   @override
   Widget build(BuildContext context) {
@@ -22,7 +23,7 @@ final TextEditingController _emailController = TextEditingController();
         backgroundColor: Colors.red,
       ),
       
-body: Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -49,38 +50,63 @@ body: Center(
             const SizedBox(
               height: 30.0,
             ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width / 2,
+              child: TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Confirm Password',
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 30.0,
+            ),
             ElevatedButton(
               onPressed: () async {
-                 // Set loading state to true
-                setState(() {
-                  _loading = true;});
-                  if (_loading){}
-                // Call registration method from AuthService when Create Account button is pressed
-                final message = await AuthService().registration(
-                  email: _emailController.text,
-                  password: _passwordController.text,
-                );
-                // Set loading state back to false
-                setState(() {
-                  _loading = false;
-                });
-                // If registration is successful, navigate to the Home screen
-                if (message!.contains('Success')) {
-                  Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (context) => const Home(email: ' ',)));
+                // Check if password and confirm password match
+                if (_passwordController.text != _confirmPasswordController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Password and Confirm Password do not match.'),
+                    ),
+                  );
+                  return;
                 }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    // Show a SnackBar with the registration result message
-                    content: Text(message),
-                  ),
-                );
-              },
-              child: _loading
-                  ? const CircularProgressIndicator() 
-                  // Show loading indicator if _loading is true
-                  : const Text('Create Account'),
-            ),
+else {
+      setState(() {
+        _loading = true;
+      });
+
+      final message = await AuthService().registration(
+        email: _emailController.text,
+        password: _passwordController.text,
+        confirmPassword: _confirmPasswordController.text, // Pass confirm password
+      );
+
+      setState(() {
+        _loading = false;
+      });
+
+      if (message!.contains('Success')) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const Home(email: ' ',)),
+        );
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+        ),
+      );
+    }
+  },
+  child: _loading
+    ? const CircularProgressIndicator()
+    : const Text('Create Account'),
+),
+  
           ],
         ),
       ),

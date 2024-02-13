@@ -5,26 +5,24 @@ import 'package:flutter_application_employment_managment_system/views/base.dart'
 import 'package:flutter_application_employment_managment_system/views/signupPage.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  //text editing controller for input fields
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
+  bool _loading = false; // Added loading state
 
   @override
   Widget build(BuildContext context) {
-    return  Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: const Text("Login"),
         backgroundColor: Colors.red,
       ),
-
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -54,33 +52,46 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-     // Call login method from AuthService when login button is pressed
+                // Set loading state to true when login button is pressed
+                setState(() {
+                  _loading = true;
+                });
+
+                // Call login method from AuthService
                 final message = await AuthService().login(
                   email: _emailController.text,
                   password: _passwordController.text,
                 );
-                 // If login is successful, navigate to the Home screen
+
+                // Set loading state back to false after login attempt
+                setState(() {
+                  _loading = false;
+                });
+
+                // If login is successful, navigate to the Home screen
                 if (message!.contains('Success')) {
                   Navigator.of(context).pushReplacement(
                     MaterialPageRoute(
-                      builder: (context) => const Home(email: '',),
+                      builder: (context) => const Home(email: ''),
                     ),
                   );
                 }
-                // Show a SnackBar with the login result message 
+
+                // Show a SnackBar with the login result message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(message),
                   ),
                 );
               },
-              child: const Text('Login'),
+              child: _loading
+                  ? const CircularProgressIndicator() // Show loading indicator if _loading is true
+                  : const Text('Login'),
             ),
             const SizedBox(
               height: 30.0,
             ),
             TextButton(
-              // Create Account button that navigates to the AddUser screen
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
